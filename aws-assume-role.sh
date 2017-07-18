@@ -21,9 +21,9 @@ assume-role(){
    # Compose your plaintext user config file (e.g., ~/.aws/assume-role-user) like
    #   export AWS_PROFILE=default
    #   export AWS_DEFAULT_PROFILE=default
-   #   export AWS_ACCESS_KEY_ID=AKIAJXS2YAL2YNSJZGNA
-   #   export AWS_SECRET_ACCESS_KEY=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
-   #   export AWS_DEFAULT_REGION="us-east-1"
+   #   export AWS_ACCESS_KEY_ID=<access key id>
+   #   export AWS_SECRET_ACCESS_KEY=<secret access key>
+   #   export AWS_DEFAULT_REGION="<your default aws region (e.g. us-east-1)>"
    #   unset AWS_ROLE_NAME AWS_SESSION_TOKEN AWS_SECURITY_TOKEN
    #
    # Encrypt your user config file and delete the plaintext
