@@ -8,12 +8,11 @@ export AWS_ROLE_NAME=${AWS_ROLE_NAME:=devops}
 
 # assign the default value unless the environment variable is defined
 export AWS_IAM_CONFIG_CRYPT=${AWS_IAM_CONFIG_CRYPT:=~/.aws/assume-role-user.gpg}
+: ${AWS_SHARED_CREDENTIALS_FILE:=~/.aws/credentials}
 
 # define some shell aliases
 alias assume-role-ansible-vault='assume-role; ansible-vault --vault-password-file=./bin/get-vault-passphrase.sh'
 alias assume-role-ansible-playbook='assume-role; ansible-playbook --vault-password-file=./bin/get-vault-passphrase.sh'
-# backwards compatibility with a prior release of aws-assume-role.sh
-alias become-sysops="assume-role ~/.aws/credentials.gpg"
 
 assume-role(){
    # Assign AWS_ROLE_NAME=<IAM role name> in your shell runcom (e.g., ~/.bashrc)
@@ -90,12 +89,6 @@ aws-iam-prompt-role-mfa(){
 }
 
 aws-iam-assume-role (){
-  # ensure the gpg executable is avilable in PATH
-  which gpg 2>&1 > /dev/null || {
-    echo 'ERROR: aws-iam-assume-role() says: '\
-       "failed to find gpg in executable search PATH"
-    return 1
-  }
   # ensure the get-role-token.py executable is avilable in PATH
   which get-role-token.py 2>&1 > /dev/null || {
     echo 'ERROR: aws-iam-assume-role() says: '\
@@ -167,6 +160,12 @@ aws-iam-drop-role-become-self (){
     unset $VAR
   done
   [[ ! -z ${AWS_IAM_CONFIG_CRYPT+x} ]] && {
+    # ensure the gpg executable is avilable in PATH
+    which gpg 2>&1 > /dev/null || {
+      echo 'ERROR: aws-iam-assume-role() says: '\
+         "failed to find gpg in executable search PATH"
+      return 1
+    }
     source <(gpg -qd $AWS_IAM_CONFIG_CRYPT)
   } || {
     echo 'ERROR: aws-iam-drop-role-become-self() says: '\
@@ -186,6 +185,16 @@ aws-iam-drop-role-become-self (){
   }
 }
 
+awsExportProfile(){
+  [[ $# -eq 1 ]] || {
+		echo "ERROR: expected the name of a profile to export"
+		return 1
+	}
+  egrep -A2 "\[$1\]" ${AWS_SHARED_CREDENTIALS_FILE} | \
+    sed -E -e '/\[.*\]/d' \
+           -e 's/^(\s+)?(aws_(secret_)?access_key(_id)?)(\s+)?=(\s+)?/export \U\2=\E/g'
+}
+
 # successfully do nothing unless the default config crypt happens to exist
 [[ -s $AWS_IAM_CONFIG_CRYPT ]] && {
   aws-iam-drop-role-become-self || {
@@ -197,4 +206,3 @@ aws-iam-drop-role-become-self (){
   # this is also
   :
 }
-
